@@ -1,84 +1,32 @@
 import { RefreshCw, WifiOff } from 'lucide-react'
-import { useCallback, useEffect, useState } from 'react'
-import { useRegisterSW } from 'virtual:pwa-register/react'
+import { useState, useSyncExternalStore } from 'react'
 
 import { Button } from '#/components/ui/button'
-
-export const PWA_UPDATE_CHECK_INTERVAL_MS = 60 * 60 * 1000
+import {
+  applyPwaUpdate,
+  dismissPwaUpdate,
+  getPwaServerSnapshot,
+  getPwaSnapshot,
+  subscribeToPwa,
+} from '#/register-pwa-update-listener'
 
 export function PwaProvider({ children }: { children: React.ReactNode }) {
-  const [registration, setRegistration] = useState<ServiceWorkerRegistration>()
-  const {
-    needRefresh: [updateAvailable, setUpdateAvailable],
-    updateServiceWorker,
-  } = useRegisterSW({
-    onRegisteredSW(_serviceWorkerUrl, serviceWorkerRegistration) {
-      setRegistration(serviceWorkerRegistration)
-    },
-    onRegisterError(error) {
-      console.error('Service worker registration failed', error)
-    },
-  })
-  const [isOnline, setIsOnline] = useState(true)
+  const { isOnline, updateAvailable } = useSyncExternalStore(
+    subscribeToPwa,
+    getPwaSnapshot,
+    getPwaServerSnapshot,
+  )
   const [isUpdating, setIsUpdating] = useState(false)
 
-  useEffect(() => {
-    function handleOnline() {
-      setIsOnline(true)
-    }
-
-    function handleOffline() {
-      setIsOnline(false)
-    }
-
-    setIsOnline(navigator.onLine)
-    window.addEventListener('online', handleOnline)
-    window.addEventListener('offline', handleOffline)
-
-    return () => {
-      window.removeEventListener('online', handleOnline)
-      window.removeEventListener('offline', handleOffline)
-    }
-  }, [])
-
-  useEffect(() => {
-    if (!registration) return
-
-    function checkForUpdate() {
-      if (!navigator.onLine || document.visibilityState !== 'visible') return
-
-      void registration?.update().catch((error: unknown) => {
-        console.error('Service worker update check failed', error)
-      })
-    }
-
-    function handleVisibilityChange() {
-      if (document.visibilityState === 'visible') checkForUpdate()
-    }
-
-    const intervalId = window.setInterval(
-      checkForUpdate,
-      PWA_UPDATE_CHECK_INTERVAL_MS,
-    )
-    document.addEventListener('visibilitychange', handleVisibilityChange)
-    window.addEventListener('online', checkForUpdate)
-
-    return () => {
-      window.clearInterval(intervalId)
-      document.removeEventListener('visibilitychange', handleVisibilityChange)
-      window.removeEventListener('online', checkForUpdate)
-    }
-  }, [registration])
-
-  const applyUpdate = useCallback(async () => {
+  async function applyUpdate() {
     setIsUpdating(true)
     try {
-      await updateServiceWorker(true)
+      await applyPwaUpdate()
     } catch (error) {
       console.error('Service worker update failed', error)
       setIsUpdating(false)
     }
-  }, [updateServiceWorker])
+  }
 
   return (
     <>
@@ -112,7 +60,7 @@ export function PwaProvider({ children }: { children: React.ReactNode }) {
               variant="ghost"
               size="sm"
               disabled={isUpdating}
-              onClick={() => setUpdateAvailable(false)}
+              onClick={dismissPwaUpdate}
             >
               Later
             </Button>

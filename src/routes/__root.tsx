@@ -149,6 +149,8 @@ function RootRouteError({ reset }: ErrorComponentProps) {
 }
 
 function RootDocument({ children }: { children: React.ReactNode }) {
+  if (typeof document !== 'undefined') return children
+
   return (
     <html lang="en" suppressHydrationWarning>
       <head>
