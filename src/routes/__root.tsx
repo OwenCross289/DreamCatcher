@@ -1,6 +1,13 @@
-import { HeadContent, Scripts, createRootRoute } from '@tanstack/react-router'
+import {
+  HeadContent,
+  Outlet,
+  Scripts,
+  createRootRoute,
+} from '@tanstack/react-router'
 import { TanStackRouterDevtoolsPanel } from '@tanstack/react-router-devtools'
 import { TanStackDevtools } from '@tanstack/react-devtools'
+
+import { ThemeProvider } from '#/components/theme-provider'
 
 import appCss from '../styles.css?url'
 
@@ -14,6 +21,7 @@ const themeBootScript = `
 `
 
 export const Route = createRootRoute({
+  component: RootLayout,
   head: () => ({
     meta: [
       { charSet: 'utf-8' },
@@ -75,6 +83,14 @@ export const Route = createRootRoute({
   ),
   shellComponent: RootDocument,
 })
+
+function RootLayout() {
+  return (
+    <ThemeProvider>
+      <Outlet />
+    </ThemeProvider>
+  )
+}
 
 function RootDocument({ children }: { children: React.ReactNode }) {
   return (
