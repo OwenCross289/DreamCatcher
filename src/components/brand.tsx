@@ -1,19 +1,26 @@
 import { Link } from '@tanstack/react-router'
-import { MoonStar } from 'lucide-react'
 
 import { cn } from '#/lib/utils'
 
+export function BrandMark({ className }: { className?: string }) {
+  return (
+    <img
+      src="/logo-mark.png?v=2"
+      alt=""
+      className={cn('block shrink-0 object-contain', className)}
+    />
+  )
+}
+
 export function Brand({ compact = false }: { compact?: boolean }) {
   return (
-    <Link to="/" className="group inline-flex items-center gap-3">
-      <span
+    <Link to="/home" className="group inline-flex items-center gap-3">
+      <BrandMark
         className={cn(
-          'grid place-items-center rounded-2xl bg-primary text-primary-foreground shadow-lg shadow-primary/20 transition-transform group-hover:-rotate-6',
+          'transition-transform group-hover:-rotate-6',
           compact ? 'size-9' : 'size-11',
         )}
-      >
-        <MoonStar className={compact ? 'size-5' : 'size-6'} />
-      </span>
+      />
       <span
         className={cn(
           'font-display font-semibold tracking-tight text-foreground',

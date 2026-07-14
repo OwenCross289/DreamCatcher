@@ -41,7 +41,7 @@ function SignIn() {
     setError('')
     const result = await authClient.signIn.social({
       provider: 'google',
-      callbackURL: '/',
+      callbackURL: '/home',
     })
 
     if (result.error) {

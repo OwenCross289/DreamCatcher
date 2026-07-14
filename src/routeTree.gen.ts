@@ -10,11 +10,13 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as SignInRouteImport } from './routes/sign-in'
+import { Route as AppRouteImport } from './routes/_app'
 import { Route as IndexRouteImport } from './routes/index'
-import { Route as DreamsNewRouteImport } from './routes/dreams/new'
-import { Route as DreamsDreamIdRouteImport } from './routes/dreams/$dreamId'
 import { Route as ApiHealthRouteImport } from './routes/api/health'
+import { Route as AppHomeRouteImport } from './routes/_app/home'
 import { Route as ApiAuthSplatRouteImport } from './routes/api/auth/$'
+import { Route as AppDreamsNewRouteImport } from './routes/_app/dreams/new'
+import { Route as AppDreamsDreamIdRouteImport } from './routes/_app/dreams/$dreamId'
 import { Route as ApiDreamsDreamIdImageRouteImport } from './routes/api/dreams/$dreamId/image'
 
 const SignInRoute = SignInRouteImport.update({
@@ -22,19 +24,13 @@ const SignInRoute = SignInRouteImport.update({
   path: '/sign-in',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AppRoute = AppRouteImport.update({
+  id: '/_app',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const DreamsNewRoute = DreamsNewRouteImport.update({
-  id: '/dreams/new',
-  path: '/dreams/new',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const DreamsDreamIdRoute = DreamsDreamIdRouteImport.update({
-  id: '/dreams/$dreamId',
-  path: '/dreams/$dreamId',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ApiHealthRoute = ApiHealthRouteImport.update({
@@ -42,10 +38,25 @@ const ApiHealthRoute = ApiHealthRouteImport.update({
   path: '/api/health',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AppHomeRoute = AppHomeRouteImport.update({
+  id: '/home',
+  path: '/home',
+  getParentRoute: () => AppRoute,
+} as any)
 const ApiAuthSplatRoute = ApiAuthSplatRouteImport.update({
   id: '/api/auth/$',
   path: '/api/auth/$',
   getParentRoute: () => rootRouteImport,
+} as any)
+const AppDreamsNewRoute = AppDreamsNewRouteImport.update({
+  id: '/dreams/new',
+  path: '/dreams/new',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppDreamsDreamIdRoute = AppDreamsDreamIdRouteImport.update({
+  id: '/dreams/$dreamId',
+  path: '/dreams/$dreamId',
+  getParentRoute: () => AppRoute,
 } as any)
 const ApiDreamsDreamIdImageRoute = ApiDreamsDreamIdImageRouteImport.update({
   id: '/api/dreams/$dreamId/image',
@@ -56,28 +67,32 @@ const ApiDreamsDreamIdImageRoute = ApiDreamsDreamIdImageRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/sign-in': typeof SignInRoute
+  '/home': typeof AppHomeRoute
   '/api/health': typeof ApiHealthRoute
-  '/dreams/$dreamId': typeof DreamsDreamIdRoute
-  '/dreams/new': typeof DreamsNewRoute
+  '/dreams/$dreamId': typeof AppDreamsDreamIdRoute
+  '/dreams/new': typeof AppDreamsNewRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
   '/api/dreams/$dreamId/image': typeof ApiDreamsDreamIdImageRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/sign-in': typeof SignInRoute
+  '/home': typeof AppHomeRoute
   '/api/health': typeof ApiHealthRoute
-  '/dreams/$dreamId': typeof DreamsDreamIdRoute
-  '/dreams/new': typeof DreamsNewRoute
+  '/dreams/$dreamId': typeof AppDreamsDreamIdRoute
+  '/dreams/new': typeof AppDreamsNewRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
   '/api/dreams/$dreamId/image': typeof ApiDreamsDreamIdImageRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/_app': typeof AppRouteWithChildren
   '/sign-in': typeof SignInRoute
+  '/_app/home': typeof AppHomeRoute
   '/api/health': typeof ApiHealthRoute
-  '/dreams/$dreamId': typeof DreamsDreamIdRoute
-  '/dreams/new': typeof DreamsNewRoute
+  '/_app/dreams/$dreamId': typeof AppDreamsDreamIdRoute
+  '/_app/dreams/new': typeof AppDreamsNewRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
   '/api/dreams/$dreamId/image': typeof ApiDreamsDreamIdImageRoute
 }
@@ -86,6 +101,7 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/sign-in'
+    | '/home'
     | '/api/health'
     | '/dreams/$dreamId'
     | '/dreams/new'
@@ -95,6 +111,7 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/sign-in'
+    | '/home'
     | '/api/health'
     | '/dreams/$dreamId'
     | '/dreams/new'
@@ -103,20 +120,21 @@ export interface FileRouteTypes {
   id:
     | '__root__'
     | '/'
+    | '/_app'
     | '/sign-in'
+    | '/_app/home'
     | '/api/health'
-    | '/dreams/$dreamId'
-    | '/dreams/new'
+    | '/_app/dreams/$dreamId'
+    | '/_app/dreams/new'
     | '/api/auth/$'
     | '/api/dreams/$dreamId/image'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  AppRoute: typeof AppRouteWithChildren
   SignInRoute: typeof SignInRoute
   ApiHealthRoute: typeof ApiHealthRoute
-  DreamsDreamIdRoute: typeof DreamsDreamIdRoute
-  DreamsNewRoute: typeof DreamsNewRoute
   ApiAuthSplatRoute: typeof ApiAuthSplatRoute
   ApiDreamsDreamIdImageRoute: typeof ApiDreamsDreamIdImageRoute
 }
@@ -130,25 +148,18 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof SignInRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/_app': {
+      id: '/_app'
+      path: ''
+      fullPath: '/'
+      preLoaderRoute: typeof AppRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/': {
       id: '/'
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/dreams/new': {
-      id: '/dreams/new'
-      path: '/dreams/new'
-      fullPath: '/dreams/new'
-      preLoaderRoute: typeof DreamsNewRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/dreams/$dreamId': {
-      id: '/dreams/$dreamId'
-      path: '/dreams/$dreamId'
-      fullPath: '/dreams/$dreamId'
-      preLoaderRoute: typeof DreamsDreamIdRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/health': {
@@ -158,12 +169,33 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiHealthRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/_app/home': {
+      id: '/_app/home'
+      path: '/home'
+      fullPath: '/home'
+      preLoaderRoute: typeof AppHomeRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/api/auth/$': {
       id: '/api/auth/$'
       path: '/api/auth/$'
       fullPath: '/api/auth/$'
       preLoaderRoute: typeof ApiAuthSplatRouteImport
       parentRoute: typeof rootRouteImport
+    }
+    '/_app/dreams/new': {
+      id: '/_app/dreams/new'
+      path: '/dreams/new'
+      fullPath: '/dreams/new'
+      preLoaderRoute: typeof AppDreamsNewRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/dreams/$dreamId': {
+      id: '/_app/dreams/$dreamId'
+      path: '/dreams/$dreamId'
+      fullPath: '/dreams/$dreamId'
+      preLoaderRoute: typeof AppDreamsDreamIdRouteImport
+      parentRoute: typeof AppRoute
     }
     '/api/dreams/$dreamId/image': {
       id: '/api/dreams/$dreamId/image'
@@ -175,12 +207,25 @@ declare module '@tanstack/react-router' {
   }
 }
 
+interface AppRouteChildren {
+  AppHomeRoute: typeof AppHomeRoute
+  AppDreamsDreamIdRoute: typeof AppDreamsDreamIdRoute
+  AppDreamsNewRoute: typeof AppDreamsNewRoute
+}
+
+const AppRouteChildren: AppRouteChildren = {
+  AppHomeRoute: AppHomeRoute,
+  AppDreamsDreamIdRoute: AppDreamsDreamIdRoute,
+  AppDreamsNewRoute: AppDreamsNewRoute,
+}
+
+const AppRouteWithChildren = AppRoute._addFileChildren(AppRouteChildren)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  AppRoute: AppRouteWithChildren,
   SignInRoute: SignInRoute,
   ApiHealthRoute: ApiHealthRoute,
-  DreamsDreamIdRoute: DreamsDreamIdRoute,
-  DreamsNewRoute: DreamsNewRoute,
   ApiAuthSplatRoute: ApiAuthSplatRoute,
   ApiDreamsDreamIdImageRoute: ApiDreamsDreamIdImageRoute,
 }

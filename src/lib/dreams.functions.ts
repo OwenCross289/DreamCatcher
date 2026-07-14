@@ -22,28 +22,6 @@ const dreamIdSchema = z.object({ dreamId: z.uuid() })
 
 export type CreateDreamInput = z.infer<typeof createDreamSchema>
 
-function toDreamSummary(dream: {
-  id: string
-  title: string
-  content: string
-  dreamDate: string
-  mood: string
-  visualStyle: string
-  imageStatus: 'generating' | 'ready' | 'failed'
-  createdAt: Date
-  updatedAt: Date
-}) {
-  return {
-    ...dream,
-    excerpt:
-      dream.content.length > 190
-        ? `${dream.content.slice(0, 187).trimEnd()}…`
-        : dream.content,
-    createdAt: dream.createdAt.toISOString(),
-    updatedAt: dream.updatedAt.toISOString(),
-  }
-}
-
 function buildImagePrompt(dream: CreateDreamInput) {
   return [
     'Create a beautiful, evocative illustration for a private dream journal.',
@@ -141,12 +119,9 @@ export const listDreams = createServerFn({ method: 'GET' }).handler(
       .select({
         id: dreams.id,
         title: dreams.title,
-        content: dreams.content,
         dreamDate: dreams.dreamDate,
         mood: dreams.mood,
-        visualStyle: dreams.visualStyle,
         imageStatus: dreams.imageStatus,
-        createdAt: dreams.createdAt,
         updatedAt: dreams.updatedAt,
       })
       .from(dreams)
@@ -155,7 +130,10 @@ export const listDreams = createServerFn({ method: 'GET' }).handler(
 
     return {
       user: { name: user.name, email: user.email, image: user.image },
-      dreams: rows.map(toDreamSummary),
+      dreams: rows.map((dream) => ({
+        ...dream,
+        updatedAt: dream.updatedAt.toISOString(),
+      })),
     }
   },
 )

@@ -13,7 +13,6 @@ import {
 } from 'lucide-react'
 import { useState } from 'react'
 
-import { AppHeader } from '#/components/app-header'
 import { DreamArtwork } from '#/components/dream-artwork'
 import { Badge } from '#/components/ui/badge'
 import { Button, buttonVariants } from '#/components/ui/button'
@@ -24,17 +23,10 @@ import {
   regenerateDreamImage,
 } from '#/lib/dreams.functions'
 import { getMoodEmoji } from '#/lib/dream-options'
-import { getViewer } from '#/lib/session.functions'
 import { cn } from '#/lib/utils'
 
-export const Route = createFileRoute('/dreams/$dreamId')({
-  loader: async ({ params }) => {
-    const [dream, user] = await Promise.all([
-      getDream({ data: { dreamId: params.dreamId } }),
-      getViewer(),
-    ])
-    return { dream, user }
-  },
+export const Route = createFileRoute('/_app/dreams/$dreamId')({
+  loader: ({ params }) => getDream({ data: { dreamId: params.dreamId } }),
   component: DreamDetail,
 })
 
@@ -48,7 +40,7 @@ function formatDate(value: string) {
 }
 
 function DreamDetail() {
-  const { dream, user } = Route.useLoaderData()
+  const dream = Route.useLoaderData()
   const router = useRouter()
   const navigate = useNavigate()
   const [action, setAction] = useState<'regenerate' | 'delete' | null>(null)
@@ -64,39 +56,29 @@ function DreamDetail() {
     if (!window.confirm('Delete this dream and its artwork forever?')) return
     setAction('delete')
     await deleteDream({ data: { dreamId: dream.id } })
-    await navigate({ to: '/' })
+    await navigate({ to: '/home' })
+    await router.invalidate()
   }
 
   return (
-    <div className="min-h-screen pb-16">
-      <AppHeader user={user} />
+    <div className="min-h-svh pb-16">
       <main className="dream-shell max-w-5xl">
-        <div className="mt-3 flex flex-wrap items-center justify-between gap-3">
+        <div className="pt-6">
           <Link
-            to="/"
-            className={cn(buttonVariants({ variant: 'ghost' }), '-ml-4')}
+            to="/home"
+            aria-label="Back to the journal"
+            title="Back to the journal"
+            className={cn(
+              buttonVariants({ variant: 'ghost', size: 'icon' }),
+              'text-muted-foreground hover:text-foreground',
+            )}
           >
             <ArrowLeft />
-            Back to the journal
           </Link>
-          <Button
-            variant="ghost"
-            size="sm"
-            className="text-destructive hover:bg-destructive/10 hover:text-destructive"
-            disabled={action !== null}
-            onClick={remove}
-          >
-            {action === 'delete' ? (
-              <LoaderCircle className="animate-spin" />
-            ) : (
-              <Trash2 />
-            )}
-            Delete dream
-          </Button>
         </div>
 
         <article className="mt-6">
-          <Card className="overflow-hidden bg-white/65">
+          <Card className="overflow-hidden bg-white/65 dark:bg-card/80">
             <div className="aspect-[4/3] overflow-hidden sm:aspect-[16/9]">
               <DreamArtwork
                 dreamId={dream.id}
@@ -150,11 +132,8 @@ function DreamDetail() {
                 </div>
               )}
 
-              {dream.imageStatus === 'ready' && (
-                <div className="mt-9 flex items-center justify-between gap-4 border-t pt-6">
-                  <p className="text-xs text-muted-foreground">
-                    Illustrated with {dream.imageModel ?? 'OpenAI'}
-                  </p>
+              <div className="mt-9 flex flex-wrap items-center justify-end gap-2 border-t pt-6">
+                {dream.imageStatus === 'ready' && (
                   <Button
                     variant="ghost"
                     size="sm"
@@ -168,8 +147,22 @@ function DreamDetail() {
                     )}
                     Reimagine
                   </Button>
-                </div>
-              )}
+                )}
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="text-destructive hover:bg-destructive/10 hover:text-destructive"
+                  disabled={action !== null}
+                  onClick={remove}
+                >
+                  {action === 'delete' ? (
+                    <LoaderCircle className="animate-spin" />
+                  ) : (
+                    <Trash2 />
+                  )}
+                  Delete dream
+                </Button>
+              </div>
             </CardContent>
           </Card>
         </article>
