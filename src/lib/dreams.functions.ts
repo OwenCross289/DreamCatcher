@@ -103,7 +103,7 @@ async function generateDreamImage(dreamId: string, input: CreateDreamInput) {
         imagePrompt: prompt,
         imageModel: model,
         imageError:
-          'The dream was saved, but its picture could not be created. You can try again.',
+          'The dream was saved, but its picture could not be created.',
         updatedAt: new Date(),
       })
       .where(eq(dreams.id, dreamId))
@@ -190,11 +190,10 @@ export const createDream = createServerFn({ method: 'POST' })
 
     if (!created) throw new Error('The dream could not be saved.')
 
-    const imageStatus = await generateDreamImage(created.id, data)
-    return { id: created.id, imageStatus }
+    return { id: created.id }
   })
 
-export const regenerateDreamImage = createServerFn({ method: 'POST' })
+export const generateDreamImageForDream = createServerFn({ method: 'POST' })
   .validator(dreamIdSchema)
   .handler(async ({ data }) => {
     const user = await requireCurrentUser()
@@ -206,6 +205,7 @@ export const regenerateDreamImage = createServerFn({ method: 'POST' })
         dreamDate: dreams.dreamDate,
         mood: dreams.mood,
         visualStyle: dreams.visualStyle,
+        imageStatus: dreams.imageStatus,
       })
       .from(dreams)
       .where(and(eq(dreams.id, data.dreamId), eq(dreams.userId, user.id)))
@@ -214,14 +214,9 @@ export const regenerateDreamImage = createServerFn({ method: 'POST' })
 
     if (!dream) throw notFound()
 
-    await db
-      .update(dreams)
-      .set({
-        imageStatus: 'generating',
-        imageError: null,
-        updatedAt: new Date(),
-      })
-      .where(eq(dreams.id, dream.id))
+    if (dream.imageStatus !== 'generating') {
+      return { imageStatus: dream.imageStatus }
+    }
 
     const imageStatus = await generateDreamImage(dream.id, {
       ...dream,

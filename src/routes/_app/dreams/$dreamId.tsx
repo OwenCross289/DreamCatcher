@@ -4,24 +4,14 @@ import {
   useNavigate,
   useRouter,
 } from '@tanstack/react-router'
-import {
-  ArrowLeft,
-  CalendarDays,
-  LoaderCircle,
-  RefreshCw,
-  Trash2,
-} from 'lucide-react'
+import { ArrowLeft, CalendarDays, LoaderCircle, Trash2 } from 'lucide-react'
 import { useState } from 'react'
 
 import { DreamArtwork } from '#/components/dream-artwork'
 import { Badge } from '#/components/ui/badge'
 import { Button, buttonVariants } from '#/components/ui/button'
 import { Card, CardContent } from '#/components/ui/card'
-import {
-  deleteDream,
-  getDream,
-  regenerateDreamImage,
-} from '#/lib/dreams.functions'
+import { deleteDream, getDream } from '#/lib/dreams.functions'
 import { getMoodEmoji } from '#/lib/dream-options'
 import { cn } from '#/lib/utils'
 
@@ -43,18 +33,11 @@ function DreamDetail() {
   const dream = Route.useLoaderData()
   const router = useRouter()
   const navigate = useNavigate()
-  const [action, setAction] = useState<'regenerate' | 'delete' | null>(null)
-
-  async function regenerate() {
-    setAction('regenerate')
-    await regenerateDreamImage({ data: { dreamId: dream.id } })
-    await router.invalidate()
-    setAction(null)
-  }
+  const [isDeleting, setIsDeleting] = useState(false)
 
   async function remove() {
     if (!window.confirm('Delete this dream and its artwork forever?')) return
-    setAction('delete')
+    setIsDeleting(true)
     await deleteDream({ data: { dreamId: dream.id } })
     await navigate({ to: '/home' })
     await router.invalidate()
@@ -107,55 +90,28 @@ function DreamDetail() {
               </div>
 
               {dream.imageStatus === 'failed' && (
-                <div className="mt-8 flex flex-col justify-between gap-4 rounded-2xl border border-destructive/20 bg-destructive/5 p-5 sm:flex-row sm:items-center">
+                <div className="mt-8 rounded-2xl border border-destructive/20 bg-destructive/5 p-5">
                   <div>
                     <p className="font-semibold">
                       The illustration could not be created
                     </p>
                     <p className="mt-1 text-sm text-muted-foreground">
                       {dream.imageError ??
-                        'Your words are safe. Try the picture again.'}
+                        'Your dream is safe even though its artwork could not be created.'}
                     </p>
                   </div>
-                  <Button
-                    variant="outline"
-                    onClick={regenerate}
-                    disabled={action !== null}
-                  >
-                    {action === 'regenerate' ? (
-                      <LoaderCircle className="animate-spin" />
-                    ) : (
-                      <RefreshCw />
-                    )}
-                    Try again
-                  </Button>
                 </div>
               )}
 
               <div className="mt-9 flex flex-wrap items-center justify-end gap-2 border-t pt-6">
-                {dream.imageStatus === 'ready' && (
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={regenerate}
-                    disabled={action !== null}
-                  >
-                    {action === 'regenerate' ? (
-                      <LoaderCircle className="animate-spin" />
-                    ) : (
-                      <RefreshCw />
-                    )}
-                    Reimagine
-                  </Button>
-                )}
                 <Button
                   variant="ghost"
                   size="sm"
                   className="text-destructive hover:bg-destructive/10 hover:text-destructive"
-                  disabled={action !== null}
+                  disabled={isDeleting}
                   onClick={remove}
                 >
-                  {action === 'delete' ? (
+                  {isDeleting ? (
                     <LoaderCircle className="animate-spin" />
                   ) : (
                     <Trash2 />

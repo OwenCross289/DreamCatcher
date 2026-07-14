@@ -14,7 +14,7 @@ import { Card, CardContent } from '#/components/ui/card'
 import { Input } from '#/components/ui/input'
 import { Label } from '#/components/ui/label'
 import { Textarea } from '#/components/ui/textarea'
-import { createDream } from '#/lib/dreams.functions'
+import { createDream, generateDreamImageForDream } from '#/lib/dreams.functions'
 import { moodEmoji, moods, visualStyles } from '#/lib/dream-options'
 import { cn } from '#/lib/utils'
 
@@ -34,6 +34,16 @@ function NewDream() {
   const router = useRouter()
   const [isSaving, setIsSaving] = useState(false)
   const [error, setError] = useState('')
+
+  async function imagineDream(dreamId: string) {
+    try {
+      await generateDreamImageForDream({ data: { dreamId } })
+    } catch {
+      // The dream is already safe; the detail page will show its latest state.
+    } finally {
+      await router.invalidate()
+    }
+  }
 
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
@@ -58,7 +68,8 @@ function NewDream() {
         to: '/dreams/$dreamId',
         params: { dreamId: created.id },
       })
-      await router.invalidate()
+      void router.invalidate()
+      void imagineDream(created.id)
     } catch {
       setError(
         'Your dream could not be saved. Please check the details and try again.',
@@ -72,13 +83,14 @@ function NewDream() {
       <main className="dream-shell max-w-5xl">
         <Link
           to="/home"
+          aria-label="Back to the journal"
+          title="Back to the journal"
           className={cn(
-            buttonVariants({ variant: 'ghost' }),
-            '-ml-3 mt-5 text-muted-foreground hover:text-foreground sm:mt-7',
+            buttonVariants({ variant: 'ghost', size: 'icon' }),
+            'mt-5 text-muted-foreground hover:text-foreground sm:mt-7',
           )}
         >
           <ArrowLeft />
-          Back to the journal
         </Link>
 
         <div className="mt-7 max-w-2xl sm:mt-10">
@@ -177,16 +189,6 @@ function NewDream() {
                 </div>
               </div>
 
-              <div className="flex gap-3 rounded-2xl border border-primary/15 bg-primary/7 p-4 text-sm leading-relaxed text-foreground">
-                <span className="grid size-8 shrink-0 place-items-center rounded-xl bg-primary/12 text-primary">
-                  <WandSparkles className="size-4" />
-                </span>
-                <p className="pt-1">
-                  Saving will ask OpenAI to paint one private illustration
-                  inspired by your words. It can take a little while to finish.
-                </p>
-              </div>
-
               {error && (
                 <p
                   role="alert"
@@ -196,27 +198,14 @@ function NewDream() {
                 </p>
               )}
 
-              <div className="flex flex-col-reverse gap-3 border-t border-border/70 pt-7 sm:flex-row sm:justify-end">
-                <Link
-                  to="/home"
-                  aria-disabled={isSaving}
-                  tabIndex={isSaving ? -1 : undefined}
-                  className={cn(
-                    buttonVariants({ variant: 'ghost' }),
-                    isSaving && 'pointer-events-none opacity-50',
-                  )}
-                >
-                  Cancel
-                </Link>
+              <div className="flex justify-end border-t border-border/70 pt-7">
                 <Button type="submit" size="lg" disabled={isSaving}>
                   {isSaving ? (
                     <LoaderCircle className="animate-spin" />
                   ) : (
                     <WandSparkles />
                   )}
-                  {isSaving
-                    ? 'Painting your dream…'
-                    : 'Save dream & create artwork'}
+                  {isSaving ? 'Saving dream…' : 'Imagine Dream'}
                 </Button>
               </div>
             </form>
