@@ -132,7 +132,7 @@ export function AppSidebar({
                 <BrandMark className="size-full" />
               </span>
               <span className="font-display text-lg font-semibold tracking-tight">
-                Dreamcatcher cool
+                Dreamcatcher
               </span>
             </SidebarMenuButton>
           </SidebarMenuItem>
