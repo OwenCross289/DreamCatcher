@@ -1,0 +1,55 @@
+services:
+  postgres:
+    image: postgres:18
+    environment:
+      POSTGRES_DB: dreamcatcher
+      POSTGRES_USER: dreamcatcher
+      POSTGRES_PASSWORD: dreamcatcher
+    ports:
+      - '5433:5432'
+    volumes:
+      - postgres-data:/var/lib/postgresql
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U dreamcatcher -d dreamcatcher']
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+  migrations:
+    build:
+      context: .
+      dockerfile: Dockerfile.migrations
+    environment:
+      DATABASE_URL: postgresql://dreamcatcher:dreamcatcher@postgres:5432/dreamcatcher
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile.app
+    env_file:
+      - .env
+    environment:
+      DATABASE_URL: postgresql://dreamcatcher:dreamcatcher@postgres:5432/dreamcatcher
+      BETTER_AUTH_URL: http://localhost:3000
+    ports:
+      - '3000:3000'
+    depends_on:
+      migrations:
+        condition: service_completed_successfully
+    healthcheck:
+      test:
+        [
+          'CMD',
+          'node',
+          '-e',
+          "fetch('http://127.0.0.1:3000/api/health').then(r=>{if(!r.ok)process.exit(1)}).catch(()=>process.exit(1))",
+        ]
+      interval: 15s
+      timeout: 5s
+      retries: 10
+
+volumes:
+  postgres-data:

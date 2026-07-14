@@ -1,0 +1,62 @@
+services:
+  app:
+    image: ghcr.io/owencross289/dreamcatcher/app:latest
+    environment:
+      NODE_ENV: production
+      HOST: 0.0.0.0
+      PORT: '3000'
+      DATABASE_URL: postgresql://dreamcatcher:${POSTGRES_PASSWORD:?POSTGRES_PASSWORD is required}@postgres:5432/dreamcatcher
+      BETTER_AUTH_URL: ${BETTER_AUTH_URL:?BETTER_AUTH_URL is required}
+      BETTER_AUTH_SECRET: ${BETTER_AUTH_SECRET:?BETTER_AUTH_SECRET is required}
+      GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID:?GOOGLE_CLIENT_ID is required}
+      GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET:?GOOGLE_CLIENT_SECRET is required}
+      AUTH_ALLOWED_EMAILS: ${AUTH_ALLOWED_EMAILS:?AUTH_ALLOWED_EMAILS is required}
+      OPENAI_API_KEY: ${OPENAI_API_KEY:?OPENAI_API_KEY is required}
+      OPENAI_IMAGE_MODEL: ${OPENAI_IMAGE_MODEL:-gpt-image-2}
+    ports:
+      - '3000'
+    depends_on:
+      - migrations
+    deploy:
+      restart_policy:
+        condition: on-failure
+    healthcheck:
+      test:
+        [
+          'CMD',
+          'node',
+          '-e',
+          "fetch('http://127.0.0.1:3000/api/health').then(r=>{if(!r.ok)process.exit(1)}).catch(()=>process.exit(1))",
+        ]
+      interval: 30s
+      timeout: 5s
+      retries: 5
+
+  migrations:
+    image: ghcr.io/owencross289/dreamcatcher/migrations:latest
+    environment:
+      DATABASE_URL: postgresql://dreamcatcher:${POSTGRES_PASSWORD:?POSTGRES_PASSWORD is required}@postgres:5432/dreamcatcher
+    depends_on:
+      - postgres
+    deploy:
+      mode: replicated-job
+      replicas: 1
+      restart_policy:
+        condition: on-failure
+
+  postgres:
+    image: postgres:18
+    environment:
+      POSTGRES_DB: dreamcatcher
+      POSTGRES_USER: dreamcatcher
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD is required}
+    volumes:
+      - postgres-data:/var/lib/postgresql
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U dreamcatcher -d dreamcatcher']
+      interval: 10s
+      timeout: 5s
+      retries: 20
+
+volumes:
+  postgres-data:

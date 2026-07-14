@@ -1,0 +1,30 @@
+name: compose validation
+
+on:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  validate-compose:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Validate Docker stack compose files
+        env:
+          POSTGRES_PASSWORD: dummy
+          BETTER_AUTH_URL: https://dreams.example.com
+          BETTER_AUTH_SECRET: dummy-secret-at-least-32-characters
+          GOOGLE_CLIENT_ID: dummy
+          GOOGLE_CLIENT_SECRET: dummy
+          AUTH_ALLOWED_EMAILS: one@example.com,two@example.com
+          OPENAI_API_KEY: dummy
+        run: |
+          cp .env.example .env
+          docker stack config -c deploy-compose.yml > /tmp/deploy-compose.rendered.yml
+          docker compose -f docker-compose.yml config > /tmp/docker-compose.rendered.yml

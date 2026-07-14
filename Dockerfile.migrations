@@ -1,0 +1,11 @@
+FROM node:26-bookworm-slim
+WORKDIR /app
+
+COPY package.json package-lock.json ./
+RUN npm ci
+
+COPY drizzle.config.ts ./
+COPY drizzle ./drizzle
+COPY src/db/schema.ts ./src/db/schema.ts
+
+CMD ["npm", "run", "db:migrate"]
