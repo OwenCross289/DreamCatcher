@@ -1,0 +1,67 @@
+name: dreamcatcher-test
+
+services:
+  postgres:
+    image: postgres:18
+    environment:
+      POSTGRES_DB: dreamcatcher_test
+      POSTGRES_USER: dreamcatcher
+      POSTGRES_PASSWORD: dreamcatcher-test
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U dreamcatcher -d dreamcatcher_test']
+      interval: 2s
+      timeout: 5s
+      retries: 30
+    volumes:
+      - test-postgres-data:/var/lib/postgresql
+
+  migrations:
+    image: dreamcatcher-test-migrations
+    build:
+      context: .
+      dockerfile: Dockerfile.migrations
+    environment:
+      DATABASE_URL: postgresql://dreamcatcher:dreamcatcher-test@postgres:5432/dreamcatcher_test
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: 'no'
+
+  app:
+    image: dreamcatcher-test-app
+    build:
+      context: .
+      dockerfile: Dockerfile.app
+    environment:
+      NODE_ENV: production
+      HOST: 0.0.0.0
+      PORT: '3000'
+      DATABASE_URL: postgresql://dreamcatcher:dreamcatcher-test@postgres:5432/dreamcatcher_test
+      BETTER_AUTH_URL: ${BETTER_AUTH_URL:?BETTER_AUTH_URL is required}
+      BETTER_AUTH_SECRET: ${BETTER_AUTH_SECRET:?BETTER_AUTH_SECRET is required}
+      GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID:?GOOGLE_CLIENT_ID is required}
+      GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET:?GOOGLE_CLIENT_SECRET is required}
+      AUTH_ALLOWED_EMAILS: ${AUTH_ALLOWED_EMAILS:?AUTH_ALLOWED_EMAILS is required}
+      OPENAI_API_KEY: ${OPENAI_API_KEY:?OPENAI_API_KEY is required}
+      OPENAI_IMAGE_MODEL: ${OPENAI_IMAGE_MODEL:-gpt-image-2}
+    ports:
+      - '3000:3000'
+    depends_on:
+      migrations:
+        condition: service_completed_successfully
+    healthcheck:
+      test:
+        [
+          'CMD',
+          'node',
+          '-e',
+          "Promise.all([fetch('http://127.0.0.1:3000/api/health'),fetch('http://127.0.0.1:3000/')]).then(rs=>{if(rs.some(r=>!r.ok))process.exit(1)}).catch(()=>process.exit(1))",
+        ]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+      start_period: 5s
+    restart: 'no'
+
+volumes:
+  test-postgres-data:

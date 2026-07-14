@@ -3,8 +3,9 @@ import { LogOut, Plus } from 'lucide-react'
 import { useState } from 'react'
 
 import { Brand } from '#/components/brand'
-import { Button } from '#/components/ui/button'
+import { Button, buttonVariants } from '#/components/ui/button'
 import { authClient } from '#/lib/auth-client'
+import { cn } from '#/lib/utils'
 
 export function AppHeader({
   user,
@@ -24,12 +25,16 @@ export function AppHeader({
     <header className="dream-shell flex items-center justify-between gap-4 py-6">
       <Brand compact />
       <div className="flex items-center gap-2 sm:gap-3">
-        <Button asChild size="sm" className="hidden sm:inline-flex">
-          <Link to="/dreams/new">
-            <Plus />
-            Capture a dream
-          </Link>
-        </Button>
+        <Link
+          to="/dreams/new"
+          className={cn(
+            buttonVariants({ size: 'sm' }),
+            'hidden sm:inline-flex',
+          )}
+        >
+          <Plus />
+          Capture a dream
+        </Link>
         <div className="hidden text-right md:block">
           <p className="max-w-40 truncate text-sm font-semibold">{user.name}</p>
           <p className="max-w-40 truncate text-xs text-muted-foreground">

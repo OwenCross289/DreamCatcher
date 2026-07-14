@@ -5,7 +5,7 @@ import type { FormEvent } from 'react'
 
 import { AppHeader } from '#/components/app-header'
 import { Badge } from '#/components/ui/badge'
-import { Button } from '#/components/ui/button'
+import { Button, buttonVariants } from '#/components/ui/button'
 import { Card, CardContent } from '#/components/ui/card'
 import { Input } from '#/components/ui/input'
 import { Label } from '#/components/ui/label'
@@ -13,6 +13,7 @@ import { Textarea } from '#/components/ui/textarea'
 import { createDream } from '#/lib/dreams.functions'
 import { moodEmoji, moods, visualStyles } from '#/lib/dream-options'
 import { getViewer } from '#/lib/session.functions'
+import { cn } from '#/lib/utils'
 
 export const Route = createFileRoute('/dreams/new')({
   loader: () => getViewer(),
@@ -67,12 +68,13 @@ function NewDream() {
     <div className="min-h-screen pb-16">
       <AppHeader user={user} />
       <main className="dream-shell max-w-4xl">
-        <Button asChild variant="ghost" className="-ml-4 mt-3">
-          <Link to="/">
-            <ArrowLeft />
-            Back to the journal
-          </Link>
-        </Button>
+        <Link
+          to="/"
+          className={cn(buttonVariants({ variant: 'ghost' }), '-ml-4 mt-3')}
+        >
+          <ArrowLeft />
+          Back to the journal
+        </Link>
 
         <div className="mt-8 text-center">
           <Badge variant="outline" className="bg-white/45">
@@ -180,9 +182,17 @@ function NewDream() {
               )}
 
               <div className="flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
-                <Button asChild variant="ghost" disabled={isSaving}>
-                  <Link to="/">Cancel</Link>
-                </Button>
+                <Link
+                  to="/"
+                  aria-disabled={isSaving}
+                  tabIndex={isSaving ? -1 : undefined}
+                  className={cn(
+                    buttonVariants({ variant: 'ghost' }),
+                    isSaving && 'pointer-events-none opacity-50',
+                  )}
+                >
+                  Cancel
+                </Link>
                 <Button type="submit" size="lg" disabled={isSaving}>
                   {isSaving ? (
                     <LoaderCircle className="animate-spin" />

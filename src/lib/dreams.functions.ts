@@ -31,6 +31,7 @@ function toDreamSummary(dream: {
   visualStyle: string
   imageStatus: 'generating' | 'ready' | 'failed'
   createdAt: Date
+  updatedAt: Date
 }) {
   return {
     ...dream,
@@ -39,6 +40,7 @@ function toDreamSummary(dream: {
         ? `${dream.content.slice(0, 187).trimEnd()}…`
         : dream.content,
     createdAt: dream.createdAt.toISOString(),
+    updatedAt: dream.updatedAt.toISOString(),
   }
 }
 
@@ -145,6 +147,7 @@ export const listDreams = createServerFn({ method: 'GET' }).handler(
         visualStyle: dreams.visualStyle,
         imageStatus: dreams.imageStatus,
         createdAt: dreams.createdAt,
+        updatedAt: dreams.updatedAt,
       })
       .from(dreams)
       .where(eq(dreams.userId, user.id))

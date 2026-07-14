@@ -6,17 +6,19 @@ export function DreamArtwork({
   dreamId,
   title,
   status,
+  imageVersion,
   className,
 }: {
   dreamId: string
   title: string
   status: 'generating' | 'ready' | 'failed'
+  imageVersion: string
   className?: string
 }) {
   if (status === 'ready') {
     return (
       <img
-        src={`/api/dreams/${dreamId}/image`}
+        src={`/api/dreams/${dreamId}/image?v=${encodeURIComponent(imageVersion)}`}
         alt={`AI illustration for ${title}`}
         className={cn('h-full w-full object-cover', className)}
       />

@@ -27,7 +27,7 @@ The repository is public; the journal is not. Google is the only sign-in method,
 
 ## Local setup
 
-Requirements: Node.js 26, npm, Docker, a Google OAuth web client, and an OpenAI API key.
+Requirements: Node.js 26, pnpm 11.9.0, Docker, a Google OAuth web client, and an OpenAI API key.
 
 1. Create local configuration:
 
@@ -41,19 +41,34 @@ Requirements: Node.js 26, npm, Docker, a Google OAuth web client, and an OpenAI 
 
    ```bash
    docker compose up -d postgres
-   npm ci
-   npm run db:migrate
+   pnpm install --frozen-lockfile
+   pnpm run db:migrate
    ```
 
 4. Start the app:
 
    ```bash
-   npm run dev
+   pnpm run dev
    ```
 
 The journal is available at [http://localhost:3000](http://localhost:3000).
 
-You can also run the complete local container stack with `docker compose up --build` after creating `.env`.
+To test the production application image locally, start the isolated test stack:
+
+```bash
+docker compose -f test-compose.yml up --build --wait
+```
+
+The containerized app is available at
+[http://localhost:3000](http://localhost:3000), using the same origin and Google
+OAuth callback as the development server. Stop the development server before
+starting this stack. The stack uses its own PostgreSQL database and volume, so it
+does not touch the normal local development database. Remove the containers and
+test data with:
+
+```bash
+docker compose -f test-compose.yml down -v
+```
 
 ### Google OAuth configuration
 
@@ -89,8 +104,8 @@ Generate an auth secret with `openssl rand -base64 32`.
 Edit [`src/db/schema.ts`](src/db/schema.ts), then generate and verify a migration:
 
 ```bash
-npm run db:generate
-npm run db:migrate
+pnpm run db:generate
+pnpm run db:migrate
 ```
 
 Commit both the schema change and the generated `drizzle/` files. Production applies committed migrations through the one-shot migrations image before the app starts.
@@ -98,11 +113,11 @@ Commit both the schema change and the generated `drizzle/` files. Production app
 ## Validation
 
 ```bash
-npm run check
-npm run lint
-npm run typecheck
-npm test
-npm run build
+pnpm run check
+pnpm run lint
+pnpm run typecheck
+pnpm test
+pnpm run build
 ```
 
 The CI workflow runs the same checks. A separate workflow renders both Compose files to catch invalid stack changes.

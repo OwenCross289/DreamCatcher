@@ -14,3 +14,8 @@ todos.json
 public/favicon.ico
 public/logo192.png
 public/logo512.png
+/.idea/.gitignore
+/.idea/encodings.xml
+/.idea/indexLayout.xml
+/.idea/ShadcnHelperSettings.xml
+/.idea/vcs.xml

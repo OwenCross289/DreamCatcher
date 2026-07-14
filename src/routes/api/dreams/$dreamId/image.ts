@@ -13,7 +13,10 @@ export const Route = createFileRoute('/api/dreams/$dreamId/image')({
         const session = await auth.api.getSession({ headers: request.headers })
 
         if (!session || !isEmailAllowed(session.user.email)) {
-          return new Response('Unauthorized', { status: 401 })
+          return new Response('Unauthorized', {
+            status: 401,
+            headers: { 'Cache-Control': 'no-store' },
+          })
         }
 
         const rows = await db
@@ -33,13 +36,16 @@ export const Route = createFileRoute('/api/dreams/$dreamId/image')({
         const dream = rows.at(0)
 
         if (!dream || !dream.imageData) {
-          return new Response('Image not found', { status: 404 })
+          return new Response('Image not found', {
+            status: 404,
+            headers: { 'Cache-Control': 'no-store' },
+          })
         }
 
         return new Response(new Uint8Array(dream.imageData), {
           headers: {
             'Content-Type': dream.imageMimeType ?? 'image/png',
-            'Cache-Control': 'private, max-age=3600',
+            'Cache-Control': 'private, max-age=31536000, immutable',
             'Last-Modified': dream.updatedAt.toUTCString(),
             'X-Content-Type-Options': 'nosniff',
           },

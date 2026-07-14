@@ -1,15 +1,17 @@
-FROM node:26-bookworm-slim AS dependencies
+FROM node:26-bookworm-slim AS base
 WORKDIR /app
+RUN npm install --global pnpm@11.9.0
 
-COPY package.json package-lock.json ./
-RUN npm ci
+FROM base AS dependencies
 
-FROM node:26-bookworm-slim AS build
-WORKDIR /app
+COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
+RUN pnpm install --frozen-lockfile
+
+FROM base AS build
 
 COPY --from=dependencies /app/node_modules ./node_modules
 COPY . .
-RUN npm run build
+RUN pnpm run build
 
 FROM node:26-bookworm-slim AS final
 WORKDIR /app

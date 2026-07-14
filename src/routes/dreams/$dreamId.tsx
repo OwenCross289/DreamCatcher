@@ -16,7 +16,7 @@ import { useState } from 'react'
 import { AppHeader } from '#/components/app-header'
 import { DreamArtwork } from '#/components/dream-artwork'
 import { Badge } from '#/components/ui/badge'
-import { Button } from '#/components/ui/button'
+import { Button, buttonVariants } from '#/components/ui/button'
 import { Card, CardContent } from '#/components/ui/card'
 import {
   deleteDream,
@@ -25,6 +25,7 @@ import {
 } from '#/lib/dreams.functions'
 import { getMoodEmoji } from '#/lib/dream-options'
 import { getViewer } from '#/lib/session.functions'
+import { cn } from '#/lib/utils'
 
 export const Route = createFileRoute('/dreams/$dreamId')({
   loader: async ({ params }) => {
@@ -71,12 +72,13 @@ function DreamDetail() {
       <AppHeader user={user} />
       <main className="dream-shell max-w-5xl">
         <div className="mt-3 flex flex-wrap items-center justify-between gap-3">
-          <Button asChild variant="ghost" className="-ml-4">
-            <Link to="/">
-              <ArrowLeft />
-              Back to the journal
-            </Link>
-          </Button>
+          <Link
+            to="/"
+            className={cn(buttonVariants({ variant: 'ghost' }), '-ml-4')}
+          >
+            <ArrowLeft />
+            Back to the journal
+          </Link>
           <Button
             variant="ghost"
             size="sm"
@@ -100,6 +102,7 @@ function DreamDetail() {
                 dreamId={dream.id}
                 title={dream.title}
                 status={dream.imageStatus}
+                imageVersion={dream.updatedAt}
               />
             </div>
             <CardContent className="p-6 sm:p-10">

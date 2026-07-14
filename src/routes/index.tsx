@@ -4,10 +4,11 @@ import { BookOpen, CalendarDays, Plus, Sparkles } from 'lucide-react'
 import { AppHeader } from '#/components/app-header'
 import { DreamArtwork } from '#/components/dream-artwork'
 import { Badge } from '#/components/ui/badge'
-import { Button } from '#/components/ui/button'
+import { buttonVariants } from '#/components/ui/button'
 import { Card, CardContent } from '#/components/ui/card'
 import { listDreams } from '#/lib/dreams.functions'
 import { getMoodEmoji } from '#/lib/dream-options'
+import { cn } from '#/lib/utils'
 
 export const Route = createFileRoute('/')({
   loader: () => listDreams(),
@@ -86,6 +87,7 @@ function Journal() {
                       dreamId={dream.id}
                       title={dream.title}
                       status={dream.imageStatus}
+                      imageVersion={dream.updatedAt}
                       className="transition duration-700 group-hover:scale-[1.035]"
                     />
                   </div>
@@ -113,15 +115,16 @@ function Journal() {
         )}
       </main>
 
-      <Button
-        asChild
-        size="icon"
-        className="fixed right-5 bottom-5 size-14 shadow-xl sm:hidden"
+      <Link
+        to="/dreams/new"
+        aria-label="Capture a dream"
+        className={cn(
+          buttonVariants({ size: 'icon' }),
+          'fixed right-5 bottom-5 size-14 shadow-xl sm:hidden',
+        )}
       >
-        <Link to="/dreams/new" aria-label="Capture a dream">
-          <Plus className="size-6" />
-        </Link>
-      </Button>
+        <Plus className="size-6" />
+      </Link>
     </div>
   )
 }
@@ -142,12 +145,13 @@ function EmptyJournal() {
           morning. Describe whatever you remember — even the strange little
           details.
         </p>
-        <Button asChild size="lg" className="mt-7">
-          <Link to="/dreams/new">
-            <Plus />
-            Capture your first dream
-          </Link>
-        </Button>
+        <Link
+          to="/dreams/new"
+          className={cn(buttonVariants({ size: 'lg' }), 'mt-7')}
+        >
+          <Plus />
+          Capture your first dream
+        </Link>
       </CardContent>
     </Card>
   )

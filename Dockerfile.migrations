@@ -1,11 +1,12 @@
 FROM node:26-bookworm-slim
 WORKDIR /app
+RUN npm install --global pnpm@11.9.0
 
-COPY package.json package-lock.json ./
-RUN npm ci
+COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
+RUN pnpm install --frozen-lockfile
 
 COPY drizzle.config.ts ./
 COPY drizzle ./drizzle
 COPY src/db/schema.ts ./src/db/schema.ts
 
-CMD ["npm", "run", "db:migrate"]
+CMD ["pnpm", "run", "db:migrate"]
