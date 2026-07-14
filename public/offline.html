@@ -1,0 +1,103 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, viewport-fit=cover"
+    />
+    <meta name="theme-color" content="#f3eafb" />
+    <title>Dreamcatcher · Offline</title>
+    <style>
+      :root {
+        color-scheme: light dark;
+        font-family: ui-sans-serif, system-ui, sans-serif;
+      }
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0;
+        min-height: 100svh;
+        display: grid;
+        place-items: center;
+        padding: 1.5rem;
+        color: #342b46;
+        background: radial-gradient(
+          circle at top,
+          #fff 0,
+          #f3eafb 48%,
+          #e7eaf7 100%
+        );
+      }
+      main {
+        width: min(100%, 28rem);
+        padding: 2.25rem;
+        text-align: center;
+        border: 1px solid rgba(96, 70, 125, 0.15);
+        border-radius: 2rem;
+        background: rgba(255, 255, 255, 0.78);
+        box-shadow: 0 2rem 5rem -2.5rem rgba(52, 35, 77, 0.5);
+      }
+      img {
+        width: 4.5rem;
+        height: 4.5rem;
+      }
+      h1 {
+        margin: 1.25rem 0 0;
+        font-family: Georgia, serif;
+        font-size: 2rem;
+      }
+      p {
+        margin: 0.75rem auto 0;
+        max-width: 22rem;
+        color: #6f647b;
+        line-height: 1.6;
+      }
+      button {
+        margin-top: 1.5rem;
+        min-height: 2.75rem;
+        padding: 0 1.25rem;
+        border: 0;
+        border-radius: 999px;
+        color: white;
+        background: #72518f;
+        font: inherit;
+        font-weight: 700;
+        cursor: pointer;
+      }
+      button:focus-visible {
+        outline: 3px solid #9f7dbc;
+        outline-offset: 3px;
+      }
+      @media (prefers-color-scheme: dark) {
+        body {
+          color: #f7f3fb;
+          background: radial-gradient(circle at top, #302843 0, #181525 70%);
+        }
+        main {
+          border-color: rgba(255, 255, 255, 0.12);
+          background: rgba(36, 31, 50, 0.88);
+        }
+        p {
+          color: #c8becf;
+        }
+        button {
+          background: #a67cc4;
+          color: #181525;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <img src="/logo-mark.png" alt="" />
+      <h1>Your dreams are still safe</h1>
+      <p>
+        You’re offline. Reconnect to open your private journal and continue
+        where you left off.
+      </p>
+      <button type="button" onclick="location.reload()">Try again</button>
+    </main>
+  </body>
+</html>

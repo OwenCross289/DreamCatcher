@@ -7,6 +7,7 @@ import { tanstackStart } from '@tanstack/react-start/plugin/vite'
 import viteReact from '@vitejs/plugin-react'
 import tailwindcss from '@tailwindcss/vite'
 import { nitro } from 'nitro/vite'
+import { VitePWA } from 'vite-plugin-pwa'
 
 function routeApiRequestsThroughNitro(): Plugin {
   return {
@@ -54,6 +55,20 @@ const config = defineConfig({
       },
     }),
     viteReact(),
+    VitePWA({
+      strategies: 'injectManifest',
+      srcDir: 'src',
+      outDir: '.output/public',
+      filename: 'sw.ts',
+      injectRegister: false,
+      registerType: 'prompt',
+      manifest: false,
+      injectManifest: {
+        globPatterns: ['**/*.{js,css,woff2,html,json,ico,png}'],
+        globIgnores: ['_shell.html', 'logo.png'],
+        rollupFormat: 'iife',
+      },
+    }),
   ],
 })
 

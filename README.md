@@ -23,6 +23,7 @@ The repository is public; the journal is not. Google is the only sign-in method,
 - Original image bytes stored in PostgreSQL, avoiding a separate public object store
 - Authenticated image responses, regeneration, and permanent deletion
 - Failure-safe creation: the written dream remains saved if OpenAI is unavailable
+- Installable PWA with prompted updates and a private-data-safe offline fallback
 - Health endpoint at `/api/health`
 
 ## Local setup
@@ -156,3 +157,4 @@ Until the Dokploy/Tailscale secrets exist, the deployment workflow still builds 
 - The allowlist does not make a leaked database harmless. Back up and secure the Postgres volume as sensitive personal data.
 - Images are stored as `bytea` inside PostgreSQL. This is deliberately simple for a two-person journal, but an encrypted private object store would scale better if the journal grows substantially.
 - Dream text is sent to OpenAI only when creating or regenerating its illustration.
+- The service worker caches only static application assets. Dream entries, generated artwork, authentication responses, and server-function requests remain network-only.

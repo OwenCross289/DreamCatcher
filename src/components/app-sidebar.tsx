@@ -2,6 +2,7 @@ import { Link, useLocation, useNavigate } from '@tanstack/react-router'
 import {
   Check,
   ChevronUp,
+  Download,
   LogOut,
   Monitor,
   Moon,
@@ -38,6 +39,7 @@ import {
 } from '#/components/ui/sidebar'
 import { authClient } from '#/lib/auth-client'
 import { useTheme } from '#/components/theme-provider'
+import { usePwa } from '#/components/pwa-provider'
 import { getMoodEmoji } from '#/lib/dream-options'
 import type { Theme } from '#/components/theme-provider'
 
@@ -130,7 +132,7 @@ export function AppSidebar({
                 <BrandMark className="size-full" />
               </span>
               <span className="font-display text-lg font-semibold tracking-tight">
-                Dreamcatcher
+                Dreamcatcher cool
               </span>
             </SidebarMenuButton>
           </SidebarMenuItem>
@@ -234,6 +236,7 @@ export function AppSidebar({
 function UserMenu({ user }: { user: SidebarUser }) {
   const navigate = useNavigate()
   const { theme, setTheme } = useTheme()
+  const { canInstall, install } = usePwa()
   const [isSigningOut, setIsSigningOut] = useState(false)
 
   async function signOut() {
@@ -290,6 +293,15 @@ function UserMenu({ user }: { user: SidebarUser }) {
                 )
               })}
             </DropdownMenuGroup>
+            {canInstall && (
+              <>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={() => void install()}>
+                  <Download />
+                  Install app
+                </DropdownMenuItem>
+              </>
+            )}
             <DropdownMenuSeparator />
             <DropdownMenuItem
               variant="destructive"

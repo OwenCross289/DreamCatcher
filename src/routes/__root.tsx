@@ -6,8 +6,12 @@ import {
 } from '@tanstack/react-router'
 import { TanStackRouterDevtoolsPanel } from '@tanstack/react-router-devtools'
 import { TanStackDevtools } from '@tanstack/react-devtools'
+import { RefreshCw, WifiOff } from 'lucide-react'
+import type { ErrorComponentProps } from '@tanstack/react-router'
 
+import { PwaProvider } from '#/components/pwa-provider'
 import { ThemeProvider } from '#/components/theme-provider'
+import { Button } from '#/components/ui/button'
 
 import appCss from '../styles.css?url'
 
@@ -32,6 +36,28 @@ export const Route = createRootRoute({
       {
         name: 'theme-color',
         content: '#f3eafb',
+        media: '(prefers-color-scheme: light)',
+      },
+      {
+        name: 'theme-color',
+        content: '#181525',
+        media: '(prefers-color-scheme: dark)',
+      },
+      {
+        name: 'mobile-web-app-capable',
+        content: 'yes',
+      },
+      {
+        name: 'apple-mobile-web-app-capable',
+        content: 'yes',
+      },
+      {
+        name: 'apple-mobile-web-app-status-bar-style',
+        content: 'black-translucent',
+      },
+      {
+        name: 'apple-mobile-web-app-title',
+        content: 'Dreamcatcher',
       },
       {
         title: 'Dreamcatcher · Keep the worlds you visit',
@@ -65,6 +91,7 @@ export const Route = createRootRoute({
       { rel: 'manifest', href: '/manifest.json' },
     ],
   }),
+  errorComponent: RootRouteError,
   notFoundComponent: () => (
     <main className="grid min-h-screen place-items-center p-6 text-center">
       <div>
@@ -87,8 +114,37 @@ export const Route = createRootRoute({
 function RootLayout() {
   return (
     <ThemeProvider>
-      <Outlet />
+      <PwaProvider>
+        <Outlet />
+      </PwaProvider>
     </ThemeProvider>
+  )
+}
+
+function RootRouteError({ reset }: ErrorComponentProps) {
+  const offline = typeof navigator !== 'undefined' && !navigator.onLine
+  const Icon = offline ? WifiOff : RefreshCw
+
+  return (
+    <main className="grid min-h-svh place-items-center p-6 text-center">
+      <div className="max-w-md">
+        <span className="mx-auto grid size-14 place-items-center rounded-2xl bg-primary/10 text-primary">
+          <Icon className="size-6" />
+        </span>
+        <h1 className="mt-5 font-display text-3xl font-semibold">
+          {offline ? 'Your dreams are still safe' : 'Something drifted away'}
+        </h1>
+        <p className="mt-3 leading-relaxed text-muted-foreground">
+          {offline
+            ? 'Reconnect to open this part of your private journal.'
+            : 'Dreamcatcher could not load this page. Please try again.'}
+        </p>
+        <Button className="mt-6" onClick={reset}>
+          <RefreshCw />
+          Try again
+        </Button>
+      </div>
+    </main>
   )
 }
 
