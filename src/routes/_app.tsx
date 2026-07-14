@@ -23,7 +23,7 @@ function AuthenticatedLayout() {
       <SidebarProvider>
         <AppSidebar dreams={dreams} user={user} />
         <SidebarInset className="min-w-0 bg-transparent">
-          <header className="sticky top-0 z-30 flex h-14 items-center gap-3 border-b border-white/40 bg-background/80 px-4 backdrop-blur-xl md:hidden">
+          <header className="sticky top-0 z-30 flex h-[calc(3.5rem+env(safe-area-inset-top))] items-center gap-3 border-b border-white/40 bg-background/80 pt-[env(safe-area-inset-top)] pr-[max(1rem,env(safe-area-inset-right))] pl-[max(1rem,env(safe-area-inset-left))] backdrop-blur-xl md:hidden">
             <SidebarTrigger aria-label="Open navigation" />
             <Link
               to="/home"

@@ -1,6 +1,7 @@
 // @vitest-environment jsdom
 
 import {
+  act,
   cleanup,
   fireEvent,
   render,
@@ -10,10 +11,8 @@ import {
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import {
+  PWA_UPDATE_CHECK_INTERVAL_MS,
   PwaProvider,
-  isIosDevice,
-  isStandaloneDisplay,
-  usePwa,
 } from '#/components/pwa-provider'
 import { configurePwaRegisterStub } from '#/test/pwa-register.stub'
 
@@ -21,87 +20,35 @@ function setNavigatorValue(key: string, value: unknown) {
   Object.defineProperty(navigator, key, { configurable: true, value })
 }
 
-function installMatchMedia(matches = false) {
-  const mediaQueryList = {
-    matches,
-    media: '(display-mode: standalone)',
-    onchange: null,
-    addEventListener: vi.fn<MediaQueryList['addEventListener']>(),
-    removeEventListener: vi.fn<MediaQueryList['removeEventListener']>(),
-    addListener: vi.fn<MediaQueryList['addListener']>(),
-    removeListener: vi.fn<MediaQueryList['removeListener']>(),
-    dispatchEvent: vi
-      .fn<MediaQueryList['dispatchEvent']>()
-      .mockReturnValue(true),
-  } satisfies MediaQueryList
-
-  Object.defineProperty(window, 'matchMedia', {
+function setVisibilityState(value: DocumentVisibilityState) {
+  Object.defineProperty(document, 'visibilityState', {
     configurable: true,
-    value: vi
-      .fn<(query: string) => MediaQueryList>()
-      .mockReturnValue(mediaQueryList),
+    value,
   })
 }
 
-function InstallProbe() {
-  const { canInstall, install, isStandalone } = usePwa()
-
-  return (
-    <div>
-      {canInstall && (
-        <button onClick={() => void install()}>Install app</button>
-      )}
-      <span>{isStandalone ? 'standalone' : 'browser'}</span>
-    </div>
-  )
+function createRegistration(update: () => Promise<void>) {
+  return { update } as unknown as ServiceWorkerRegistration
 }
 
-function renderProvider(child: React.ReactNode = <InstallProbe />) {
+function renderProvider(child: React.ReactNode = <div>Journal</div>) {
   return render(<PwaProvider>{child}</PwaProvider>)
 }
-
-describe('PWA browser detection', () => {
-  it('recognizes iOS and iPadOS desktop-mode user agents', () => {
-    expect(
-      isIosDevice({
-        userAgent: 'Mozilla/5.0 (iPhone)',
-        platform: 'iPhone',
-        maxTouchPoints: 5,
-      }),
-    ).toBe(true)
-    expect(
-      isIosDevice({
-        userAgent: 'Mozilla/5.0 (Macintosh)',
-        platform: 'MacIntel',
-        maxTouchPoints: 5,
-      }),
-    ).toBe(true)
-  })
-
-  it('recognizes browser and navigator standalone modes', () => {
-    expect(isStandaloneDisplay(true, false)).toBe(true)
-    expect(isStandaloneDisplay(false, true)).toBe(true)
-    expect(isStandaloneDisplay(false, false)).toBe(false)
-  })
-})
 
 describe('PwaProvider', () => {
   beforeEach(() => {
     configurePwaRegisterStub()
-    installMatchMedia()
-    setNavigatorValue('userAgent', 'Mozilla/5.0 (Windows NT 10.0)')
-    setNavigatorValue('platform', 'Win32')
-    setNavigatorValue('maxTouchPoints', 0)
     setNavigatorValue('onLine', true)
-    setNavigatorValue('standalone', false)
+    setVisibilityState('visible')
   })
 
   afterEach(() => {
     cleanup()
     vi.restoreAllMocks()
+    vi.useRealTimers()
   })
 
-  it('captures and consumes the browser install prompt', async () => {
+  it('does not intercept or render UI for browser install prompts', () => {
     const prompt = vi.fn<() => Promise<void>>().mockResolvedValue(undefined)
     const event = new Event('beforeinstallprompt', { cancelable: true })
     Object.assign(event, {
@@ -111,38 +58,15 @@ describe('PwaProvider', () => {
 
     renderProvider()
     fireEvent(window, event)
-    fireEvent.click(await screen.findByRole('button', { name: 'Install app' }))
 
-    await waitFor(() => expect(prompt).toHaveBeenCalledOnce())
-    await waitFor(() =>
-      expect(screen.queryByRole('button', { name: 'Install app' })).toBeNull(),
-    )
-  })
-
-  it('shows iOS Home Screen instructions instead of a browser prompt', async () => {
-    setNavigatorValue('userAgent', 'Mozilla/5.0 (iPhone) AppleWebKit/605.1.15')
-    setNavigatorValue('platform', 'iPhone')
-    setNavigatorValue('maxTouchPoints', 5)
-
-    renderProvider()
-    fireEvent.click(await screen.findByRole('button', { name: 'Install app' }))
-
-    expect(
-      await screen.findByRole('dialog', { name: 'Install Dreamcatcher' }),
-    ).toBeTruthy()
-    expect(screen.getByText(/Add to Home Screen/)).toBeTruthy()
-  })
-
-  it('does not offer installation when already running standalone', async () => {
-    installMatchMedia(true)
-    renderProvider()
-
-    await waitFor(() => expect(screen.getByText('standalone')).toBeTruthy())
-    expect(screen.queryByRole('button', { name: 'Install app' })).toBeNull()
+    expect(event.defaultPrevented).toBe(false)
+    expect(prompt).not.toHaveBeenCalled()
+    expect(screen.queryByRole('dialog')).toBeNull()
+    expect(screen.queryByText('Install app')).toBeNull()
   })
 
   it('announces connectivity loss', async () => {
-    renderProvider(<div>Journal</div>)
+    renderProvider()
     setNavigatorValue('onLine', false)
     fireEvent(window, new Event('offline'))
 
@@ -151,12 +75,64 @@ describe('PwaProvider', () => {
     ).toBeTruthy()
   })
 
+  it('checks for an update when the app becomes visible', async () => {
+    const update = vi.fn<() => Promise<void>>().mockResolvedValue(undefined)
+    setVisibilityState('hidden')
+    configurePwaRegisterStub({ registration: createRegistration(update) })
+    renderProvider()
+
+    setVisibilityState('visible')
+    fireEvent(document, new Event('visibilitychange'))
+
+    await waitFor(() => expect(update).toHaveBeenCalledOnce())
+  })
+
+  it('checks for an update when connectivity returns', async () => {
+    const update = vi.fn<() => Promise<void>>().mockResolvedValue(undefined)
+    setNavigatorValue('onLine', false)
+    configurePwaRegisterStub({ registration: createRegistration(update) })
+    renderProvider()
+
+    setNavigatorValue('onLine', true)
+    fireEvent(window, new Event('online'))
+
+    await waitFor(() => expect(update).toHaveBeenCalledOnce())
+  })
+
+  it('checks hourly while the app is open and visible', async () => {
+    vi.useFakeTimers()
+    const update = vi.fn<() => Promise<void>>().mockResolvedValue(undefined)
+    configurePwaRegisterStub({ registration: createRegistration(update) })
+    renderProvider()
+
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(PWA_UPDATE_CHECK_INTERVAL_MS)
+    })
+
+    expect(update).toHaveBeenCalledOnce()
+  })
+
+  it('does not poll while offline or hidden', async () => {
+    vi.useFakeTimers()
+    const update = vi.fn<() => Promise<void>>().mockResolvedValue(undefined)
+    setNavigatorValue('onLine', false)
+    setVisibilityState('hidden')
+    configurePwaRegisterStub({ registration: createRegistration(update) })
+    renderProvider()
+
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(PWA_UPDATE_CHECK_INTERVAL_MS)
+    })
+
+    expect(update).not.toHaveBeenCalled()
+  })
+
   it('offers a controlled service-worker update', async () => {
     const update = vi
       .fn<(reloadPage?: boolean) => Promise<void>>()
       .mockResolvedValue(undefined)
     configurePwaRegisterStub({ needRefresh: true, update })
-    renderProvider(<div>Journal</div>)
+    renderProvider()
 
     expect(await screen.findByText('A new version is available')).toBeTruthy()
     fireEvent.click(screen.getByRole('button', { name: 'Reload' }))
@@ -169,7 +145,7 @@ describe('PwaProvider', () => {
       .fn<(reloadPage?: boolean) => Promise<void>>()
       .mockResolvedValue(undefined)
     configurePwaRegisterStub({ needRefresh: true, update })
-    renderProvider(<div>Journal</div>)
+    renderProvider()
 
     fireEvent.click(await screen.findByRole('button', { name: 'Later' }))
 
